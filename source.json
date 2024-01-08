@@ -14,7 +14,8 @@
     },
     "bannerUrl":"banner.png",
     "githubRepos":[
-        "nmxi/Unity_VRC_AutoImageSetter"
+        "nmxi/Unity_VRC_AutoImageSetter",
+        "nmxi/Unity_VRC_MikinelSwitchSystem"
     ],
     "packages":[]
 }
