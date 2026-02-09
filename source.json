@@ -16,7 +16,8 @@
     "githubRepos":[
         "nmxi/Unity_VRC_AutoImageSetter",
         "nmxi/Unity_VRC_MikinelSwitchSystem",
-        "nmxi/Unity_VRC_PersonalizationUtils"
+        "nmxi/Unity_VRC_PersonalizationUtils",
+        "nmxi/Unity_VRC_IwaSyncCustomThemeEditor"
     ],
     "packages":[]
 }
