@@ -32,6 +32,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      # Use a PAT when cross-repo/private repo access is needed.
+      # Falls back to the default token for public repos.
+      LISTING_GITHUB_TOKEN: ${{ secrets.VPM_REPO_TOKEN != '' && secrets.VPM_REPO_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       
       - uses: actions/checkout@v5 # check out this repo
@@ -48,11 +52,35 @@ jobs:
             ${{env.pathToCi}}/.nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
+
+      - name: Validate source repositories
+        shell: bash
+        env:
+          GH_TOKEN: ${{ env.LISTING_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          missing=0
+          while IFS= read -r repo; do
+            [ -z "$repo" ] && continue
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$repo")
+            echo "$repo -> $code"
+            if [ "$code" -ne 200 ]; then
+              missing=1
+            fi
+          done < <(jq -r '.githubRepos[]? // empty' source.json)
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more repositories are not accessible with the current token."
+            echo "Set repository secret VPM_REPO_TOKEN with read access to all repos in source.json."
+            exit 1
+          fi
           
       - name: Build Package Version Listing
         run: ${{env.pathToCi}}/build.cmd BuildMultiPackageListing --root ${{env.pathToCi}} --list-publish-directory $GITHUB_WORKSPACE/${{env.listPublishDirectory}}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.LISTING_GITHUB_TOKEN }}
  
       - name: Setup Pages
         uses: actions/configure-pages@v5
